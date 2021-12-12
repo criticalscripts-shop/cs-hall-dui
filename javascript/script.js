@@ -198,6 +198,7 @@ class MediaManager {
                 fetch(`https://${resourceName}/frequencyData`, {
                     method: 'POST',
                     body: JSON.stringify({
+                        area: this.area,
                         levels: this.getAverageFrequencyValues()
                     })
                 }).catch(error => {})
@@ -217,6 +218,8 @@ class MediaManager {
                         fetch(`https://${resourceName}/colorData`, {
                             method: 'POST',
                             body: JSON.stringify({
+                                area: this.area,
+
                                 colors: {
                                     Vibrant: palette.Vibrant.rgb,
                                     DarkVibrant: palette.DarkVibrant.rgb,
@@ -263,6 +266,7 @@ class MediaManager {
             fetch(`https://${resourceName}/controllerPlayingInfo`, {
                 method: 'POST',
                 body: JSON.stringify({
+                    area: this.area,
                     time: controller.time(),
                     duration: controller.duration,
                     playing: controller.playing
