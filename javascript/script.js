@@ -470,12 +470,10 @@ class MediaManager {
     }
 
     show() {
-        this.syncedData.videoToggle = true
         this.controller.show()
     }
     
     hide() {
-        this.syncedData.videoToggle = false
         this.controller.hide()
     }
 
@@ -598,6 +596,15 @@ window.addEventListener('message', event => {
                 volumeMultiplier: event.data.volumeMultiplier,
                 lowPassGainReductionPercent: event.data.lowPassGainReductionPercent
             })
+
+            break
+
+        case 'cs-hall:setSpeakerVolume':
+            if (!activeInstance)
+                return
+
+            if (activeInstance.speakers[event.data.speakerId])
+                activeInstance.speakers[event.data.speakerId].volumeMultiplier = event.data.volumeMultiplier
 
             break
 
