@@ -31,7 +31,7 @@ class YouTubeController extends DummyController {
         placeholder.id = elementId
         
         this.container = document.body.appendChild(placeholder)
-        this.container.style.display = 'none'
+        this.container.style.opacity = '0.0'
         
         const setPlayer = () => {
             if ((!YT) || (!YT.Player))
@@ -94,9 +94,9 @@ class YouTubeController extends DummyController {
                             this.stop()
 
                         if ((this.player.getPlayerState() === YT.PlayerState.PLAYING || this.player.getPlayerState() === YT.PlayerState.PAUSED || this.player.getPlayerState() === YT.PlayerState.BUFFERING) && this.showing)
-                            this.container.style.display = 'block'
+                            this.container.style.opacity = '1.0'
                         else
-                            this.container.style.display = 'none'
+                            this.container.style.opacity = '0.0'
 
                         if (this.pending.seek && (this.player.getPlayerState() === YT.PlayerState.PLAYING || this.player.getPlayerState() === YT.PlayerState.PAUSED))
                             this.seek(this.pending.seek)
@@ -272,11 +272,11 @@ class YouTubeController extends DummyController {
         this.showing = true
 
         if (this.player.getPlayerState() === YT.PlayerState.PLAYING || this.player.getPlayerState() === YT.PlayerState.PAUSED || this.player.getPlayerState() === YT.PlayerState.BUFFERING)
-            this.container.style.display = 'block'
+            this.container.style.opacity = '1.0'
     }
 
     hide() {
         this.showing = false
-        this.container.style.display = 'none'
+        this.container.style.opacity = '0.0'
     }
 }

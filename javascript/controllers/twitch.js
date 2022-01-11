@@ -33,7 +33,7 @@ class TwitchController extends DummyController {
         placeholder.id = elementId
 
         this.container = document.body.appendChild(placeholder)
-        this.container.style.display = 'none'
+        this.container.style.opacity = '0.0'
 
         this.player = new Twitch.Player(elementId, {
             width: '100%',
@@ -57,7 +57,7 @@ class TwitchController extends DummyController {
                 this.hook()
 
             if (this.showing)
-                this.container.style.display = 'block'
+                this.container.style.opacity = '1.0'
 
             this.playing = true
             this.stopped = false
@@ -204,7 +204,7 @@ class TwitchController extends DummyController {
         this.stopped = true
         this.pending.pause = false
         this.pending.seek = null
-        this.container.style.display = 'none'
+        this.container.style.opacity = '0.0'
 
         this.player.setChannel('twitchdev')
         this.player.pause()
@@ -239,7 +239,7 @@ class TwitchController extends DummyController {
             return
         }
 
-        this.container.style.display = 'none'
+        this.container.style.opacity = '0.0'
 
         this.player.setChannel('twitchdev')
         this.player.pause()
@@ -289,11 +289,11 @@ class TwitchController extends DummyController {
         this.showing = true
 
         if (!this.stopped)
-            this.container.style.display = 'block'
+            this.container.style.opacity = '1.0'
     }
 
     hide() {
         this.showing = false
-        this.container.style.display = 'none'
+        this.container.style.opacity = '0.0'
     }
 }

@@ -23,7 +23,7 @@ class FrameController extends DummyController {
         this.frame = document.createElement('iframe')
 
         this.frame.id = 'frame-controller'
-        this.frame.style.display = 'none'
+        this.frame.style.opacity = '0.0'
         this.frame.seamless = true
         this.frame.src = 'about:blank'
 
@@ -98,7 +98,7 @@ class FrameController extends DummyController {
 
             this.element.addEventListener('error', event => {
                 this.manager.controllerError(this, 'E_SOURCE_ERROR')
-                this.frame.style.display = 'none'
+                this.frame.style.opacity = '0.0'
 
                 if (this.element.ended && this.playing) {
                     this.playing = false
@@ -118,7 +118,7 @@ class FrameController extends DummyController {
                 this.manager.hideSpinner()
 
                 if (this.video && this.showing)
-                    this.frame.style.display = 'block'
+                    this.frame.style.opacity = '1.0'
 
                 this.element.muted = false
                 this.playing = true
@@ -290,11 +290,11 @@ class FrameController extends DummyController {
         this.showing = true
         
         if (this.video)
-            this.frame.style.display = 'block'
+            this.frame.style.opacity = '1.0'
     }
 
     hide() {
         this.showing = false
-        this.frame.style.display = 'none'
+        this.frame.style.opacity = '0.0'
     }
 }
