@@ -163,7 +163,6 @@ class MediaManager {
         this.syncedData = {
             playing: false,
             stopped: true,
-            videoToggle: true,
             time: 0,
             volume: 0.0,
             url: null,
@@ -435,12 +434,6 @@ class MediaManager {
 
         if (data.temp.seek || data.temp.force)
             this.seek(data.temp.force && data.duration ? (data.time + 1 > data.duration ? data.time : (data.time + 1)) : data.time)
-
-        if (data.videoToggle !== this.syncedData.videoToggle || data.temp.force)
-            if (data.videoToggle || typeof(data.videoToggle) === 'undefined') // Backwards compatibility with 1.x.x versions.
-                this.show()
-            else
-                this.hide()
     }
 
     adjust(time) {
@@ -550,6 +543,13 @@ class MediaManager {
         document.getElementById('idle').style = `background-image:url('${url}')`
     }
 
+    setVideoToggle(toggle) {
+        if (toggle)
+            this.show()
+        else
+            this.hide()
+    }
+
     desync() {
         this.area = null
 
@@ -601,6 +601,14 @@ window.addEventListener('message', event => {
 
             break
 
+        case 'cs-hall:setVideoToggle':
+            if (!activeInstance)
+                return
+
+            activeInstance.setVideoToggle(event.data.toggle)
+
+            break
+
         case 'cs-hall:setIdleWallpaperUrl':
             if (!activeInstance)
                 return
@@ -628,8 +636,7 @@ window.addEventListener('message', event => {
                 time: event.data.time,
                 volume: event.data.volume,
                 url: event.data.url,
-                temp: event.data.temp,
-                videoToggle: event.data.videoToggle
+                temp: event.data.temp
             })
 
             break
