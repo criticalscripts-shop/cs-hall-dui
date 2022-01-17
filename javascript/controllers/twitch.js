@@ -134,6 +134,7 @@ class TwitchController extends DummyController {
                 this.media.disconnect()
 
             this.element = element
+
             this.element.addEventListener('seeked', event => {
                 clearTimeout(this.seekTimeout)
                 this.seekTimeout = setTimeout(() => this.seeked(), seekedDelayMs)

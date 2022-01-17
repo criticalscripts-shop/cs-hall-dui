@@ -1,4 +1,5 @@
 const pauseSeekedTimeoutMs = 250
+const playingSeekedTimeoutMs = 250
 const checkIntervalMs = 500
 
 class YouTubeController extends DummyController {
@@ -14,6 +15,8 @@ class YouTubeController extends DummyController {
         this.duration = null
         this.media = null
         this.playCheckInterval = null
+        this.pauseSeekedTimeout = null
+        this.playingSeekedTimeout = null
         this.hasScreenshotSupport = true
         this.pending.seek = null
         this.pending.stop = false
@@ -242,6 +245,13 @@ class YouTubeController extends DummyController {
                 if (!this.playing)
                     this.seeked()
             }, pauseSeekedTimeoutMs)
+
+            clearTimeout(this.playingSeekedTimeout)
+
+            this.playingSeekedTimeout = setTimeout(() => {
+                if (this.seeking && this.player.getPlayerState() === YT.PlayerState.PLAYING)
+                    this.seeked()
+            }, playingSeekedTimeoutMs)
         } else
             this.pending.seek = time
     }
@@ -294,5 +304,12 @@ class YouTubeController extends DummyController {
     hide() {
         this.showing = false
         this.container.style.opacity = '0.0'
+    }
+
+    seeked() {
+        super.seeked()
+        
+        clearTimeout(this.pauseSeekedTimeout)
+        clearTimeout(this.playingSeekedTimeout)
     }
 }
