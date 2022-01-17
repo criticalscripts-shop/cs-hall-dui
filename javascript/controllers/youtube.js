@@ -64,28 +64,44 @@ class YouTubeController extends DummyController {
                     },
 
                     onError: event => {
-                        this.manager.controllerError(this, `E_YOUTUBE_ERROR`)
+                        if (this.source)
+                            if (event.data === 2)
+                                this.play()
+                            else {
+                                this.set(null)
+                                this.manager.controllerError(this, `E_YOUTUBE_ERROR`)
+                            }
 
-                        if ((this.player.getPlayerState() === YT.PlayerState.ENDED || this.player.getPlayerState() === -1) && this.playing)
+                        if ((this.player.getPlayerState() === YT.PlayerState.ENDED || this.player.getPlayerState() === -1) && this.playing) {
+                            this.set(null)
                             this.manager.controllerEnded(this)
+                        }
 
                         if (this.player.getPlayerState() === YT.PlayerState.PLAYING)
                             this.playing = true
                         else
                             this.playing = false
+
+                        if (this.playing && (!this.source))
+                            this.player.stopVideo()
                     },
 
                     onStateChange: event => {
                         if (this.player.getPlayerState() === YT.PlayerState.PLAYING)
                             this.controls(this.player.getIframe().contentWindow.navigator.mediaSession)
 
-                        if ((this.player.getPlayerState() === YT.PlayerState.ENDED || this.player.getPlayerState() === -1) && this.playing)
+                        if ((this.player.getPlayerState() === YT.PlayerState.ENDED || this.player.getPlayerState() === -1) && this.playing) {
+                            this.set(null)
                             this.manager.controllerEnded(this)
+                        }
 
                         if (this.player.getPlayerState() === YT.PlayerState.PLAYING)
                             this.playing = true
                         else
                             this.playing = false
+
+                        if (this.playing && (!this.source))
+                            this.player.stopVideo()
 
                         if (this.pending.pause && this.player.getPlayerState() === YT.PlayerState.PLAYING)
                             this.pause()

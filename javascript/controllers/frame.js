@@ -195,7 +195,7 @@ class FrameController extends DummyController {
             return
 
         this.duration = null
-        this.frame.style = 'display: none'
+        this.frame.style.opacity = 0.0
         this.manager.hideSpinner()
         this.seeked()
 
@@ -240,7 +240,7 @@ class FrameController extends DummyController {
             return
         }
 
-        this.frame.style = 'display: none'
+        this.frame.style.opacity = 0.0
 
         if (this.playing) {
             this.element.pause()

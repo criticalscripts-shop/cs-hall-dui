@@ -7,7 +7,7 @@ const filterLerpIntervalMs = 16.66
 const frequencyUpdateIntervalMs = 50
 const screenshotUpdateIntervalMs = 500
 const readyCheckIntervalMs = 500
-const playingInfoUpdateIntervalMs = 500
+const playingInfoUpdateIntervalMs = 250
 
 let activeInstance = null
 
