@@ -81,10 +81,8 @@ class FrameController extends DummyController {
             this.video = false
             this.element = null
             this.stop()
-            this.manager.controllerInfo(this)
             return
-        } else
-            this.manager.controllerInfo(this)
+        }
 
         if (element !== this.element) {
             if (this.media)
@@ -216,7 +214,6 @@ class FrameController extends DummyController {
         this.hooked = false
         this.element = null
         this.frame.src = 'about:blank'
-        this.manager.controllerInfo(this)
     }
 
     seek(time) {
@@ -257,7 +254,6 @@ class FrameController extends DummyController {
         this.element = null
         this.frame.src = this.source
         this.manager.hideSpinner()
-        this.manager.controllerInfo(this)
         this.seeked()
     }
 
