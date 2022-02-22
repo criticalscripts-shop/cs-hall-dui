@@ -92,10 +92,27 @@
         <script src="https://www.youtube.com/iframe_api"></script>
         <script src="https://player.twitch.tv/js/embed/v1.js"></script>
         <script src="javascript/libraries/vibrant.min.js"></script>
-        <script src="javascript/controllers/dummy.js"></script>
-        <script src="javascript/controllers/youtube.js"></script>
-        <script src="javascript/controllers/twitch.js"></script>
-        <script src="javascript/controllers/frame.js"></script>
-        <script src="javascript/script.js"></script>
+
+        <script>
+            const urlParams = new URLSearchParams(window.location.search)
+            const debug = urlParams.get('debug')
+            const version = urlParams.get('v')
+
+            const loadScript = src => {
+                const script = document.createElement('script')
+            
+                script.src = `${src}?v=${version}&c=${debug ? new Date().getTime() : 'on'}`
+                script.type = 'text/javascript'
+                script.async = false
+            
+                document.getElementsByTagName('body')[0].appendChild(script)
+            }
+
+            loadScript('javascript/controllers/dummy.js')
+            loadScript('javascript/controllers/youtube.js')
+            loadScript('javascript/controllers/twitch.js')
+            loadScript('javascript/controllers/frame.js')
+            loadScript('javascript/script.js')
+        </script>
     </body>
 </html>
