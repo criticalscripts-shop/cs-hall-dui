@@ -3,7 +3,7 @@ const playingSeekedTimeoutMs = 250
 const checkIntervalMs = 500
 
 class YouTubeController extends DummyController {
-    constructor(manager) {
+    constructor(manager, cb) {
         super(manager, false)
 
         this.key = 'youtube'
@@ -143,6 +143,7 @@ class YouTubeController extends DummyController {
         const checkInterval = setInterval(() => {
             if (this.container && this.player && this.player.cueVideoById) {
                 this.ready = true
+                cb()
                 clearInterval(checkInterval)
             }
         }, checkIntervalMs)
@@ -172,7 +173,7 @@ class YouTubeController extends DummyController {
     }
 
     play(muted) {
-        if ((!this.source) || (!this.player))
+        if ((!this.source) || (!this.ready))
             return
 
         this.pending.stop = false
@@ -196,7 +197,7 @@ class YouTubeController extends DummyController {
     }
 
     pause() {
-        if ((!this.source) || (!this.player))
+        if ((!this.source) || (!this.ready))
             return
 
         this.pending.play = false
@@ -211,7 +212,7 @@ class YouTubeController extends DummyController {
     }
     
     stop() {
-        if ((!this.source) || (!this.player))
+        if ((!this.source) || (!this.ready))
             return
 
         this.duration = null
@@ -230,7 +231,7 @@ class YouTubeController extends DummyController {
     }
 
     seek(time) {
-        if ((!this.source) || (!this.player))
+        if ((!this.source) || (!this.ready))
             return
 
         if (this.player.getPlayerState() === YT.PlayerState.PLAYING || this.player.getPlayerState() === YT.PlayerState.PAUSED) {
@@ -257,6 +258,9 @@ class YouTubeController extends DummyController {
     }
 
     set(source) {
+        if (!this.ready)
+            return
+
         if (!source) {
             this.stop()
             this.source = null
@@ -270,7 +274,7 @@ class YouTubeController extends DummyController {
     }
 
     time() {
-        return (this.source && this.player && this.player.getCurrentTime()) || 0
+        return (this.source && this.ready && this.player.getCurrentTime()) || 0
     }
 
     screenshot() {

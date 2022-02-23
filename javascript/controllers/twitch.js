@@ -3,7 +3,7 @@ const seekedDelayMs = 1000
 const playerCheckTimeoutMs = 5000
 
 class TwitchController extends DummyController {
-    constructor(manager) {
+    constructor(manager, cb) {
         super(manager, false)
 
         this.key = 'twitch'
@@ -116,6 +116,7 @@ class TwitchController extends DummyController {
         })
 
         this.ready = true
+        cb()
     }
 
     hook() {
@@ -148,7 +149,7 @@ class TwitchController extends DummyController {
     }
 
     play(muted) {
-        if ((!this.source) || (!this.player))
+        if ((!this.source) || (!this.ready))
             return
 
         this.manager.showSpinner()
@@ -180,7 +181,7 @@ class TwitchController extends DummyController {
     }
 
     pause() {
-        if ((!this.source) || (!this.player))
+        if ((!this.source) || (!this.ready))
             return
 
         this.awaitingPlayingEvent = false
@@ -197,7 +198,7 @@ class TwitchController extends DummyController {
     }
 
     stop() {
-        if ((!this.source) || (!this.player))
+        if ((!this.source) || (!this.ready))
             return
 
         this.duration = null
@@ -218,7 +219,7 @@ class TwitchController extends DummyController {
     }
 
     seek(time) {
-        if ((!this.source) || (!this.player))
+        if ((!this.source) || (!this.ready))
             return
 
         clearTimeout(this.seekTimeout)
@@ -234,6 +235,9 @@ class TwitchController extends DummyController {
     }
 
     set(source) {
+        if (!this.ready)
+            return
+
         if (!source) {
             this.stop()
             this.source = null
@@ -262,7 +266,7 @@ class TwitchController extends DummyController {
     }
 
     time() {
-        return (this.source && this.player && this.player.getCurrentTime()) || 0
+        return (this.source && this.ready && this.player.getCurrentTime()) || 0
     }
 
     screenshot() {

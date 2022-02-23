@@ -1,5 +1,5 @@
 class FrameController extends DummyController {
-    constructor(manager) {
+    constructor(manager, cb) {
         super(manager, false)
 
         this.key = 'frame'
@@ -36,6 +36,7 @@ class FrameController extends DummyController {
 
         document.body.appendChild(this.frame)
         this.ready = true
+        cb()
     }
 
     hook() {
@@ -258,7 +259,7 @@ class FrameController extends DummyController {
     }
 
     time() {
-        return (this.source && this.element && this.element.currentTime) || 0
+        return (this.source && this.ready && this.element && this.element.currentTime) || 0
     }
 
     screenshot() {

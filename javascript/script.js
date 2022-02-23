@@ -6,7 +6,6 @@ const gainLerpIntervalMs = 16.66
 const filterLerpIntervalMs = 16.66
 const frequencyUpdateIntervalMs = 50
 const screenshotUpdateIntervalMs = 500
-const readyCheckIntervalMs = 500
 const playingInfoUpdateIntervalMs = 250
 
 let activeInstance = null
@@ -184,10 +183,7 @@ class MediaManager {
         this.analyser.smoothingTimeConstant = 0.8
 
         this.controllers = {
-            dummy: new DummyController(this, true),
-            youtube: new YouTubeController(this),
-            twitch: new TwitchController(this),
-            frame: new FrameController(this)
+            dummy: new DummyController(this, true)
         }
 
         this.controller = this.controllers.dummy
@@ -238,16 +234,10 @@ class MediaManager {
 
         setInterval(() => this.controllerPlayingInfo(this.controller), playingInfoUpdateIntervalMs)
 
-        const readyCheck = setInterval(() => {
-            if (Object.values(this.controllers).every(v => v.ready)) {
-                fetch(`https://${resourceName}/managerReady`, {
-                    method: 'POST',
-                    body: JSON.stringify()
-                }).catch(error => {})
-
-                clearInterval(readyCheck)
-            }
-        }, readyCheckIntervalMs)
+        fetch(`https://${resourceName}/managerReady`, {
+            method: 'POST',
+            body: JSON.stringify()
+        }).catch(error => {})
 
         document.title = ' '
     }
@@ -415,25 +405,34 @@ class MediaManager {
     sync(data) {
         this.area = data.area
 
-        if (data.url !== this.syncedData.url || data.temp.force)
-            this.set(data.url)
+        this.set(data.url !== this.syncedData.url || data.temp.force, data.url).then(() => {
+            if (this.area !== data.area)
+                return
 
-        if ((data.stopped !== this.syncedData.stopped || data.temp.force) && data.stopped)
-            this.stop()
-        else if (data.playing !== this.syncedData.playing || data.temp.force) {
-            this.play(true)
+            if ((data.stopped !== this.syncedData.stopped || data.temp.force) && data.stopped)
+                this.stop()
+            else if (data.playing !== this.syncedData.playing || data.temp.force) {
+                this.play(true)
 
-            if (data.playing)
-                this.play()
-            else
-                this.pause()
-        }
+                if (data.playing)
+                    this.play()
+                else
+                    this.pause()
+            }
 
-        if (data.volume !== this.syncedData.volume || data.temp.force)
-            this.setVolume(data.volume)
+            if (data.volume !== this.syncedData.volume || data.temp.force)
+                this.setVolume(data.volume)
 
-        if (data.temp.seek || data.temp.force)
-            this.seek(data.temp.force && data.duration ? (data.time + 1 > data.duration ? data.time : (data.time + 1)) : data.time)
+            if (data.temp.seek || data.temp.force)
+                this.seek(data.temp.force && data.duration ? (data.time + 1 > data.duration ? data.time : (data.time + 1)) : data.time)
+
+            fetch(`https://${resourceName}/synced`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    plate: this.plate
+                })
+            }).catch(error => {})
+        })
     }
 
     adjust(time) {
@@ -477,64 +476,97 @@ class MediaManager {
         this.controller.hide()
     }
 
-    set(source) {
-        this.syncedData.url = source
+    set(state, source) {
+        return new Promise(async (resolve, reject) => {
+            this.syncedData.url = source
 
-        if (!source) {
-            this.controller.set(null)
-            return
-        }
+            if ((!source) && state) {
+                this.controller.set(null)
+                resolve()
+                return
+            }
 
-        let data = {
-            key: 'dummy',
-            source
-        }
+            let data = {
+                key: 'dummy',
+                source
+            }
 
-        urlCheckElement.value = source
+            urlCheckElement.value = source
 
-        if (urlCheckElement.validity.valid) {
-            const ytVideoId = source.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i)
-            const twitchChannel = source.match(/^(?:https?:\/\/)?(?:www\.|go\.)?twitch\.tv\/([A-z0-9_]+)($|\?)/i)
-            const twitchVideo = source.match(/^(?:https?:\/\/)?(?:www\.|go\.)?twitch\.tv\/videos\/([0-9]+)($|\?)/i)
-            const twitchClip = source.match(/(?:(?:^(?:https?:\/\/)?clips\.twitch\.tv\/([A-z0-9_-]+)(?:$|\?))|(?:^(?:https?:\/\/)?(?:www\.|go\.)?twitch\.tv\/(?:[A-z0-9_-]+)\/clip\/([A-z0-9_-]+)($|\?)))/)
+            if (urlCheckElement.validity.valid) {
+                const ytVideoId = source.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i)
+                const twitchChannel = source.match(/^(?:https?:\/\/)?(?:www\.|go\.)?twitch\.tv\/([A-z0-9_]+)($|\?)/i)
+                const twitchVideo = source.match(/^(?:https?:\/\/)?(?:www\.|go\.)?twitch\.tv\/videos\/([0-9]+)($|\?)/i)
+                const twitchClip = source.match(/(?:(?:^(?:https?:\/\/)?clips\.twitch\.tv\/([A-z0-9_-]+)(?:$|\?))|(?:^(?:https?:\/\/)?(?:www\.|go\.)?twitch\.tv\/(?:[A-z0-9_-]+)\/clip\/([A-z0-9_-]+)($|\?)))/)
 
-            if (ytVideoId && ytVideoId[1])
-                data = {
-                    key: 'youtube',
-                    source: ytVideoId[1]
+                if (ytVideoId && ytVideoId[1])
+                    data = {
+                        key: 'youtube',
+                        source: ytVideoId[1]
+                    }
+                else if (twitchChannel && twitchChannel[1])
+                    data = {
+                        key: 'twitch',
+                        source: `channel:${twitchChannel[1]}`
+                    }
+                else if (twitchVideo && twitchVideo[1])
+                    data = {
+                        key: 'twitch',
+                        source: `video:${twitchVideo[1]}`
+                    }
+                else if (twitchClip && (twitchClip[1] || twitchClip[2]))
+                    data = {
+                        key: 'frame',
+                        source: `${source}&parent=${location.hostname}`
+                    }
+                else
+                    data = {
+                        key: 'frame',
+                        source
+                    }
+            }
+
+            if (this.controller.key === data.key) {
+                if (state)
+                    this.controller.set(data.source)
+
+                resolve()
+            } else {
+                if (state)
+                    this.controller.set(null)
+                
+                const cb = () => {
+                    this.controller = this.controllers[data.key]
+
+                    if (state)
+                        this.controller.set(data.source)
+    
+                    resolve()
                 }
-            else if (twitchChannel && twitchChannel[1])
-                data = {
-                    key: 'twitch',
-                    source: `channel:${twitchChannel[1]}`
-                }
-            else if (twitchVideo && twitchVideo[1])
-                data = {
-                    key: 'twitch',
-                    source: `video:${twitchVideo[1]}`
-                }
-            else if (twitchClip && (twitchClip[1] || twitchClip[2]))
-                data = {
-                    key: 'frame',
-                    source: `${source}&parent=${location.hostname}`
-                }
-            else
-                data = {
-                    key: 'frame',
-                    source
-                }
-        }
 
-        if (this.controller.key === data.key)
-            this.controller.set(data.source)
-        else {
-            this.controller.set(null)
-            this.controller = this.controllers[data.key]
-            this.controller.set(data.source)
-        }
+                if (!this.controllers[data.key])
+                    switch (data.key) {
+                        case 'youtube':
+                            this.controllers[data.key] = new YouTubeController(this, cb)
+                            break
 
-        this.controllerInfo(this.controller)
-        this.controllerPlayingInfo(this.controller)
+                        case 'twitch':
+                            this.controllers[data.key] = new TwitchController(this, cb)
+                            break
+                        
+                        case 'frame':
+                            this.controllers[data.key] = new FrameController(this, cb)
+                            break
+                    }
+                else
+                    cb()
+            }
+
+            if (state) {
+                this.controllerInfo(this.controller)
+                this.controllerPlayingInfo(this.controller)
+            }
+        })
     }
 
     setIdleWallpaperUrl(url) {
