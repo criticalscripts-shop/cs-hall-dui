@@ -69,11 +69,7 @@ class Speaker {
             this.applyLowPassFilter = this.manager.applyLowPassFilter
             this.lowPassFilterFade = data.lowPassFilterFade
             this.applyingLowPassFilter = this.lowPassFilterFade > 0
-
-            if (!this.applyLowPassFilter)
-                this.disconnectFilter()
-            else
-                this.connectFilter(this.lowPassFilterFade)
+            this.updateFilters()
         }
         
         const linearMultiplier = 1.0 - ((data.distance - this.options.refDistance) / (this.options.maxDistance - this.options.refDistance))
@@ -85,6 +81,13 @@ class Speaker {
             this.panner.distanceModel = 'exponential'
 
         this.gain.gain.value = 0.75 * (this.manager.volume * this.volumeMultiplier * this.filterGainMultiplier)
+    }
+
+    updateFilters() {
+        if (!this.applyLowPassFilter)
+            this.disconnectFilter()
+        else
+            this.connectFilter(this.lowPassFilterFade)
     }
 
     connectFilter(fade) {
@@ -266,6 +269,9 @@ class MediaManager {
     controllerHooked(controller) {
         if (controller.media)
             controller.media.connect(this.analyser)
+
+        for (const id in this.speakers)
+            this.speakers[id].updateFilters()
     }
 
     controllerInfo(controller) {
@@ -536,12 +542,14 @@ class MediaManager {
                     this.controller.set(null)
                 
                 const cb = (dummy = false) => {
+                    const oldControllerKey = this.controller.key
+
                     if (dummy)
                         this.controller = this.controllers.dummy
                     else
                         this.controller = this.controllers[data.key]
-
-                    if (state)
+                    
+                    if (state || oldControllerKey !== this.controller.key)
                         this.controller.set(data.source)
     
                     resolve()
