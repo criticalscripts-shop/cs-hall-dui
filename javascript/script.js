@@ -405,7 +405,7 @@ class MediaManager {
     sync(data) {
         this.area = data.area
 
-        this.set(data.url !== this.syncedData.url || data.temp.force, data.url).then(() => {
+        this.set(data.url !== this.syncedData.url || data.temp.force, data.playing, data.url).then(() => {
             if (this.area !== data.area)
                 return
 
@@ -476,7 +476,7 @@ class MediaManager {
         this.controller.hide()
     }
 
-    set(state, source) {
+    set(state, playing, source) {
         return new Promise(async (resolve, reject) => {
             this.syncedData.url = source
 
@@ -544,7 +544,7 @@ class MediaManager {
                     resolve()
                 }
 
-                if (!this.controllers[data.key])
+                if ((!this.controllers[data.key]) && playing)
                     switch (data.key) {
                         case 'youtube':
                             this.controllers[data.key] = new YouTubeController(this, cb)
