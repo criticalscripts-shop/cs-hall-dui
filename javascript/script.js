@@ -535,8 +535,11 @@ class MediaManager {
                 if (state)
                     this.controller.set(null)
                 
-                const cb = () => {
-                    this.controller = this.controllers[data.key]
+                const cb = (dummy = false) => {
+                    if (dummy)
+                        this.controller = this.controllers.dummy
+                    else
+                        this.controller = this.controllers[data.key]
 
                     if (state)
                         this.controller.set(data.source)
@@ -544,20 +547,23 @@ class MediaManager {
                     resolve()
                 }
 
-                if ((!this.controllers[data.key]) && playing)
-                    switch (data.key) {
-                        case 'youtube':
-                            this.controllers[data.key] = new YouTubeController(this, cb)
-                            break
+                if (!this.controllers[data.key])
+                    if (playing)
+                        switch (data.key) {
+                            case 'youtube':
+                                this.controllers[data.key] = new YouTubeController(this, cb)
+                                break
 
-                        case 'twitch':
-                            this.controllers[data.key] = new TwitchController(this, cb)
-                            break
-                        
-                        case 'frame':
-                            this.controllers[data.key] = new FrameController(this, cb)
-                            break
-                    }
+                            case 'twitch':
+                                this.controllers[data.key] = new TwitchController(this, cb)
+                                break
+                            
+                            case 'frame':
+                                this.controllers[data.key] = new FrameController(this, cb)
+                                break
+                        }
+                    else
+                        cb(true)
                 else
                     cb()
             }
