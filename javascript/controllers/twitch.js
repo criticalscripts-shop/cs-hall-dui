@@ -116,7 +116,7 @@ class TwitchController extends DummyController {
         })
 
         this.ready = true
-        cb()
+        setTimeout(() => cb(), 0)
     }
 
     hook() {

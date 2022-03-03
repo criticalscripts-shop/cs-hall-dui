@@ -36,7 +36,7 @@ class FrameController extends DummyController {
 
         document.body.appendChild(this.frame)
         this.ready = true
-        cb()
+        setTimeout(() => cb(), 0)
     }
 
     hook() {
