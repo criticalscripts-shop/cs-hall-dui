@@ -543,7 +543,6 @@ class MediaManager {
                 
                 const cb = (dummy = false) => {
                     const oldControllerKey = this.controller.key
-                    console.log('cb', oldControllerKey, data.key, dummy, state)
 
                     if (dummy)
                         this.controller = this.controllers.dummy
