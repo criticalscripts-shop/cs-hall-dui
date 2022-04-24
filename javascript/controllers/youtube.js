@@ -261,8 +261,9 @@ class YouTubeController extends DummyController {
         if (!this.ready)
             return
 
+        this.stop()
+
         if (!source) {
-            this.stop()
             this.source = null
             return
         }
