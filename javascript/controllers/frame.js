@@ -232,9 +232,8 @@ class FrameController extends DummyController {
     }
 
     set(source) {
-        this.stop()
-
         if (!source) {
+            this.stop()
             this.source = null
             return
         }

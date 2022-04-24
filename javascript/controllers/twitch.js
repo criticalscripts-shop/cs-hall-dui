@@ -238,9 +238,8 @@ class TwitchController extends DummyController {
         if (!this.ready)
             return
 
-        this.stop()
-
         if (!source) {
+            this.stop()
             this.source = null
             return
         }
