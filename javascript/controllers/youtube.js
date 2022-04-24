@@ -23,6 +23,7 @@ class YouTubeController extends DummyController {
         this.pending.pause = false
         this.pending.play = false
         this.playing = false
+        this.stopped = true
         this.hooked = false
         this.showing = true
 
@@ -90,8 +91,10 @@ class YouTubeController extends DummyController {
                         else
                             this.playing = false
 
-                        if (this.playing && (!this.source))
+                        if (this.playing && (!this.source)) {
+                            this.stopped = true
                             this.player.stopVideo()
+                        }
                     },
 
                     onStateChange: event => {
@@ -113,8 +116,10 @@ class YouTubeController extends DummyController {
                         else
                             this.playing = false
 
-                        if (this.playing && (!this.source))
+                        if (this.playing && (!this.source)) {
+                            this.stopped = true
                             this.player.stopVideo()
+                        }
 
                         if (this.pending.pause && this.player.getPlayerState() === YT.PlayerState.PLAYING)
                             this.pause()
@@ -122,7 +127,7 @@ class YouTubeController extends DummyController {
                         if (this.pending.stop && this.player.getPlayerState() === YT.PlayerState.PLAYING)
                             this.stop()
 
-                        if ((this.player.getPlayerState() === YT.PlayerState.PLAYING || this.player.getPlayerState() === YT.PlayerState.PAUSED || this.player.getPlayerState() === YT.PlayerState.BUFFERING) && this.showing)
+                        if ((this.player.getPlayerState() === YT.PlayerState.PLAYING || this.player.getPlayerState() === YT.PlayerState.PAUSED || this.player.getPlayerState() === YT.PlayerState.BUFFERING) && this.showing && this.player.getCurrentTime() > 0)
                             this.container.style.opacity = '1.0'
                         else
                             this.container.style.opacity = '0.0'
@@ -136,10 +141,12 @@ class YouTubeController extends DummyController {
                             this.hook()
 
                         if (this.player.getPlayerState() === YT.PlayerState.PLAYING && (!this.duration))
-                            this.duration = this.player.getCurrentTime() < 1 ? (this.player.getDuration() ? this.player.getDuration() : -1) : -1
+                            this.duration = (!this.player.getDuration()) || this.player.getDuration() < 1 ? null : this.player.getDuration()
 
-                        if (this.player.getPlayerState() === YT.PlayerState.PLAYING)
+                        if (this.player.getPlayerState() === YT.PlayerState.PLAYING) {
+                            this.pending.play = false
                             this.seeked()
+                        }
                     }
                 }
             })
@@ -185,7 +192,7 @@ class YouTubeController extends DummyController {
     play(muted) {
         if ((!this.source) || (!this.ready))
             return
-
+        
         this.pending.stop = false
         this.pending.pause = false
         this.pending.play = true
@@ -194,6 +201,10 @@ class YouTubeController extends DummyController {
             this.player.mute()
         else
             this.player.unMute()
+        
+        this.stopped = false
+
+        clearInterval(this.playCheckInterval)
 
         this.playCheckInterval = setInterval(() => {
             if (typeof(this.player.getPlayerState()) === 'undefined')
@@ -201,8 +212,8 @@ class YouTubeController extends DummyController {
 
             if (this.pending.play)
                 this.player.playVideo()
-
-            clearInterval(this.playCheckInterval)
+            else
+                clearInterval(this.playCheckInterval)
         }, 50)
     }
 
@@ -224,7 +235,7 @@ class YouTubeController extends DummyController {
     stop() {
         if ((!this.source) || (!this.ready))
             return
-
+        
         this.duration = null
         this.pending.seek = null
         this.pending.pause = false
@@ -235,6 +246,7 @@ class YouTubeController extends DummyController {
    
         if (this.player.getPlayerState() === YT.PlayerState.PLAYING || this.player.getPlayerState() === YT.PlayerState.PAUSED) {
             this.pending.stop = false
+            this.stopped = true
             this.player.stopVideo()
         } else
             this.pending.stop = true
@@ -244,7 +256,7 @@ class YouTubeController extends DummyController {
         if ((!this.source) || (!this.ready))
             return
 
-        if (this.player.getPlayerState() === YT.PlayerState.PLAYING || this.player.getPlayerState() === YT.PlayerState.PAUSED) {
+        if ((this.player.getPlayerState() === YT.PlayerState.PLAYING || this.player.getPlayerState() === YT.PlayerState.PAUSED) && (!this.stopped)) {
             this.pending.seek = null
             this.player.seekTo(time)
             this.player.unMute()
@@ -268,7 +280,7 @@ class YouTubeController extends DummyController {
     }
 
     set(source) {
-        if (!this.ready)
+        if ((!this.ready) || source === this.source)
             return
 
         if (!source) {
@@ -280,7 +292,6 @@ class YouTubeController extends DummyController {
         this.source = source
         this.duration = null
         this.player.cueVideoById(this.source)
-        this.seeked()
     }
 
     time() {
@@ -311,7 +322,7 @@ class YouTubeController extends DummyController {
     show() {
         this.showing = true
 
-        if (this.player.getPlayerState() === YT.PlayerState.PLAYING || this.player.getPlayerState() === YT.PlayerState.PAUSED || this.player.getPlayerState() === YT.PlayerState.BUFFERING)
+        if (this.player.getCurrentTime() > 0 && (this.player.getPlayerState() === YT.PlayerState.PLAYING || this.player.getPlayerState() === YT.PlayerState.PAUSED || this.player.getPlayerState() === YT.PlayerState.BUFFERING))
             this.container.style.opacity = '1.0'
     }
 

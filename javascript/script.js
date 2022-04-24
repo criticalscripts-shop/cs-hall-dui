@@ -533,9 +533,7 @@ class MediaManager {
             }
 
             if (this.controller.key === data.key) {
-                if (state)
-                    this.controller.set(data.source)
-
+                this.controller.set(data.source)
                 resolve()
             } else {
                 if (state)
