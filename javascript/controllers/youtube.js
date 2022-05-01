@@ -81,10 +81,8 @@ class YouTubeController extends DummyController {
                         if (((!ytVideoId) || ytVideoId[1] !== this.source) && this.source !== null)
                             return
 
-                        if ((this.player.getPlayerState() === YT.PlayerState.ENDED || this.player.getPlayerState() === -1) && this.playing) {
-                            this.set(null)
+                        if ((this.player.getPlayerState() === YT.PlayerState.ENDED || this.player.getPlayerState() === -1) && this.playing)
                             this.manager.controllerEnded(this)
-                        }
 
                         if (this.player.getPlayerState() === YT.PlayerState.PLAYING)
                             this.playing = true
@@ -106,10 +104,8 @@ class YouTubeController extends DummyController {
                         if (this.player.getPlayerState() === YT.PlayerState.PLAYING)
                             this.controls(this.player.getIframe().contentWindow.navigator.mediaSession)
 
-                        if ((this.player.getPlayerState() === YT.PlayerState.ENDED || this.player.getPlayerState() === -1) && this.playing) {
-                            this.set(null)
+                        if ((this.player.getPlayerState() === YT.PlayerState.ENDED || this.player.getPlayerState() === -1) && this.playing)
                             this.manager.controllerEnded(this)
-                        }
 
                         if (this.player.getPlayerState() === YT.PlayerState.PLAYING)
                             this.playing = true
@@ -142,11 +138,6 @@ class YouTubeController extends DummyController {
 
                         if (this.player.getPlayerState() === YT.PlayerState.PLAYING && (!this.duration))
                             this.duration = (!this.player.getDuration()) || this.player.getDuration() < 1 ? null : this.player.getDuration()
-
-                        if (this.player.getPlayerState() === YT.PlayerState.PLAYING) {
-                            this.pending.play = false
-                            this.seeked()
-                        }
                     }
                 }
             })
@@ -210,9 +201,15 @@ class YouTubeController extends DummyController {
             if (typeof(this.player.getPlayerState()) === 'undefined')
                 return
 
-            if (this.pending.play)
-                this.player.playVideo()
-            else
+            if (this.pending.play) {
+                const ytVideoId = this.player.getVideoUrl().match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i)
+
+                if (ytVideoId && ytVideoId[1] === this.pending.play) {
+                    this.pending.play = false
+                    this.seeked()
+                    this.player.playVideo()
+                }
+            } else
                 clearInterval(this.playCheckInterval)
         }, 50)
     }
@@ -259,7 +256,6 @@ class YouTubeController extends DummyController {
         if ((this.player.getPlayerState() === YT.PlayerState.PLAYING || this.player.getPlayerState() === YT.PlayerState.PAUSED) && (!this.stopped)) {
             this.pending.seek = null
             this.player.seekTo(time)
-            this.player.unMute()
             this.seeking = true
 
             clearTimeout(this.pauseSeekedTimeout)
