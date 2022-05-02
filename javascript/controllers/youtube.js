@@ -186,7 +186,7 @@ class YouTubeController extends DummyController {
         
         this.pending.stop = false
         this.pending.pause = false
-        this.pending.play = true
+        this.pending.play = this.source
 
         if (muted || this.pending.seek)
             this.player.mute()
