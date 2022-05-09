@@ -205,8 +205,11 @@ class YouTubeController extends DummyController {
                 const ytVideoId = this.player.getVideoUrl().match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i)
 
                 if (ytVideoId && ytVideoId[1] === this.pending.play) {
-                    this.pending.play = false
-                    this.seeked()
+                    if (this.playing) {
+                        this.pending.play = false
+                        this.seeked()
+                    }
+
                     this.player.playVideo()
                 }
             } else
