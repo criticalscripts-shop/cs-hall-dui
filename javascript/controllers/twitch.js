@@ -1,6 +1,7 @@
 const vodCheckerIntervalMs = 500
 const seekedDelayMs = 1000
 const playerCheckTimeoutMs = 5000
+const elementId = 'twitch-controller'
 
 class TwitchController extends DummyController {
     constructor(manager, cb) {
@@ -25,25 +26,32 @@ class TwitchController extends DummyController {
         this.hooked = false
         this.showing = true
 
-        this.canvas = document.createElement('canvas')
-
         const placeholder = document.createElement('div')
-        const elementId = 'twitch-controller'
 
         placeholder.id = elementId
 
         this.container = document.body.appendChild(placeholder)
         this.container.style.opacity = '0.0'
 
-        this.player = new Twitch.Player(elementId, {
+        this.canvas = document.createElement('canvas')
+        this.ready = true
+
+        setTimeout(() => cb(), 0)
+    }
+
+    attachPlayer(source, type) {
+        if (this.player)
+            this.detachPlayer()
+
+        const player = new Twitch.Player(elementId, {
             width: '100%',
             height: '100%',
-            channel: 'twitchdev',
+            [type]: source,
             autoplay: false,
             parent: location.hostname
         })
 
-        this.player.addEventListener(Twitch.Player.READY, event => {
+        player.addEventListener(Twitch.Player.READY, event => {
             this.container = document.getElementById(elementId)
 
             if (this.container.querySelector('iframe').contentDocument.querySelector('div.content-overlay-gate__allow-pointers > button:not([data-a-target="player-overlay-mature-accept"])')) {
@@ -52,7 +60,7 @@ class TwitchController extends DummyController {
             }
         })
 
-        this.player.addEventListener(Twitch.Player.PLAY, event => {
+        player.addEventListener(Twitch.Player.PLAY, event => {
             if (!this.hooked)
                 this.hook()
 
@@ -63,13 +71,13 @@ class TwitchController extends DummyController {
             this.stopped = false
         })
 
-        this.player.addEventListener(Twitch.Player.PLAYING, event => {
+        player.addEventListener(Twitch.Player.PLAYING, event => {
             this.awaitingPlayingEvent = false
 
             this.controls(this.container.querySelector('iframe').contentWindow.navigator.mediaSession)
 
             if (!this.duration)
-                this.duration = this.player.getDuration() === Infinity ? -1 : this.player.getDuration()
+                this.duration = player.getDuration() === Infinity ? -1 : player.getDuration()
 
             const mutedElement = this.container.querySelector('iframe').contentDocument.querySelector('div.muted-segments-alert__content')
             const mutedButton = mutedElement ? mutedElement.querySelector('button') : null
@@ -90,33 +98,38 @@ class TwitchController extends DummyController {
                 this.seek(this.pending.seek)
         })
 
-        this.player.addEventListener(Twitch.Player.PAUSE, event => {
+        player.addEventListener(Twitch.Player.PAUSE, event => {
             this.playing = false
         })
 
-        this.player.addEventListener(Twitch.Player.PLAYBACK_BLOCKED, event => {
-            if (this.source && this.source.replace('channel:', '') === this.player.getChannel()) {
+        player.addEventListener(Twitch.Player.PLAYBACK_BLOCKED, event => {
+            if (this.source && this.source.replace('channel:', '') === player.getChannel()) {
                 this.manager.controllerError(this, 'E_TWITCH_PLAYBACK_BLOCKED')
                 this.stop()
             }
         })
 
-        this.player.addEventListener(Twitch.Player.OFFLINE, event => {
-            if (this.source && this.source.replace('channel:', '') === this.player.getChannel()) {
+        player.addEventListener(Twitch.Player.OFFLINE, event => {
+            if (this.source && this.source.replace('channel:', '') === player.getChannel()) {
                 this.manager.controllerError(this, 'E_TWITCH_CHANNEL_OFFLINE')
                 this.stop()
             }
         })
 
-        this.player.addEventListener(Twitch.Player.ENDED, event => {
+        player.addEventListener(Twitch.Player.ENDED, event => {
             if (this.playing)
                 this.manager.controllerEnded(this)
 
             this.stop()
         })
 
-        this.ready = true
-        setTimeout(() => cb(), 0)
+        this.player = player
+    }
+
+    detachPlayer() {
+        document.getElementById(elementId).innerHTML = ''
+        this.player = null
+        this.hooked = false
     }
 
     hook() {
@@ -159,8 +172,11 @@ class TwitchController extends DummyController {
 
         this.awaitingPlayingEvent = true
         this.pending.pause = false
-        this.player.setMuted(muted || this.pending.seek ? true : false)
-        this.player.play()
+
+        if (this.player) {
+            this.player.setMuted(muted || this.pending.seek ? true : false)
+            this.player.play()
+        }
 
         clearTimeout(this.playerCheckTimeout)
         clearInterval(this.vodCheckerInterval)
@@ -171,7 +187,7 @@ class TwitchController extends DummyController {
         }, playerCheckTimeoutMs)
 
         this.vodCheckerInterval = setInterval(() => {
-            if (this.container.querySelector('iframe').contentDocument.querySelector('div.content-overlay-gate__allow-pointers > button:not([data-a-target="player-overlay-mature-accept"])')) {
+            if (this.container.querySelector('iframe') && this.container.querySelector('iframe').contentDocument.querySelector('div.content-overlay-gate__allow-pointers > button:not([data-a-target="player-overlay-mature-accept"])')) {
                 this.manager.controllerError(this, 'E_TWITCH_VOD_SUB_ONLY')
                 this.stop()
                 clearInterval(this.vodCheckerInterval)
@@ -192,7 +208,9 @@ class TwitchController extends DummyController {
 
         if (this.playing) {
             this.duration = null
-            this.player.pause()
+
+            if (this.player)
+                this.player.pause()
         } else
             this.pending.pause = true
     }
@@ -208,8 +226,8 @@ class TwitchController extends DummyController {
         this.pending.seek = null
         this.container.style.opacity = '0.0'
 
-        this.player.setChannel('twitchdev')
-        this.player.pause()
+        if (this.player)
+            this.player.pause()
 
         clearTimeout(this.playerCheckTimeout)
         clearInterval(this.vodCheckerInterval)
@@ -228,8 +246,11 @@ class TwitchController extends DummyController {
 
         if (this.playing) {
             this.pending.seek = null
-            this.player.seek(time)
-            this.player.setMuted(false)
+
+            if (this.player) {
+                this.player.seek(time)
+                this.player.setMuted(false)
+            }
         } else
             this.pending.seek = time
     }
@@ -241,13 +262,19 @@ class TwitchController extends DummyController {
         if (!source) {
             this.stop()
             this.source = null
+            this.detachPlayer()
             return
         }
 
+        if (source.startsWith('channel:'))
+            this.attachPlayer(source.replace('channel:', ''), 'channel')
+        else if (source.startsWith('video:'))
+            this.attachPlayer(source.replace('video:', ''), 'video')
+
         this.container.style.opacity = '0.0'
 
-        this.player.setChannel('twitchdev')
-        this.player.pause()
+        if (this.player)
+            this.player.pause()
 
         clearTimeout(this.playerCheckTimeout)
         clearInterval(this.vodCheckerInterval)
@@ -259,14 +286,10 @@ class TwitchController extends DummyController {
         this.duration = null
         this.seeked()
 
-        if (this.source.startsWith('channel:'))
-            this.player.setChannel(this.source.replace('channel:', ''))
-        else if (this.source.startsWith('video:'))
-            this.player.setVideo(this.source.replace('video:', ''))
     }
 
     time() {
-        return (this.source && this.ready && this.player.getCurrentTime()) || 0
+        return (this.source && this.ready && this.player && this.player.getCurrentTime()) || 0
     }
 
     screenshot() {

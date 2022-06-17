@@ -546,10 +546,10 @@ class MediaManager {
                         this.controller = this.controllers.dummy
                     else
                         this.controller = this.controllers[data.key]
-                    
+
                     if (state || oldControllerKey !== this.controller.key)
                         this.controller.set(data.source)
-    
+
                     resolve()
                 }
 
