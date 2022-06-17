@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <script>
-            if (!navigator.userAgent.includes('CitizenFX'))
-                window.location = 'https://criticalscripts.shop'
+            //if (!navigator.userAgent.includes('CitizenFX'))
+                //window.location = 'https://criticalscripts.shop'
         </script>
 
         <style>
@@ -102,12 +102,11 @@
             const urlParams = new URLSearchParams(window.location.search)
             const debug = urlParams.get('debug')
             const version = urlParams.get('v')
-            const bump = 'twitch-fix'
 
             const loadScript = src => {
                 const script = document.createElement('script')
             
-                script.src = `${src}?v=${version}&c=${debug ? new Date().getTime() : 'on'}&b=${bump}`
+                script.src = `${src}?v=${version}&c=${debug ? new Date().getTime() : 'on'}`
                 script.type = 'text/javascript'
                 script.async = false
             
