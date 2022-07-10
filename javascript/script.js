@@ -18,7 +18,6 @@ class Speaker {
 
         this.volumeMultiplier = this.options.volumeMultiplier
         this.filterGainMultiplier = 1.0
-        this.distanceMultiplier = 1.0
         this.applyLowPassFilter = true
 
         this.filter = this.manager.context.createBiquadFilter()
