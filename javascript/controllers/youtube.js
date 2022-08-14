@@ -61,14 +61,11 @@ class YouTubeController extends DummyController {
                 preload: true,
                 events: {
                     onReady: event => {
-                        console.log('onReady')
                         this.container = document.getElementById(elementId)
                         this.hook()
                     },
 
                     onError: event => {
-                        console.log('onError', event.data)
-
                         if (this.source)
                             if (event.data === 2)
                                 this.play()
@@ -97,8 +94,6 @@ class YouTubeController extends DummyController {
                     },
 
                     onStateChange: event => {
-                        console.log('onStateChange', this.player.getPlayerState())
-
                         const ytVideoId = this.player.getVideoUrl().match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i)
 
                         if (((!ytVideoId) || ytVideoId[1] !== this.source) && this.source !== null)
@@ -180,12 +175,10 @@ class YouTubeController extends DummyController {
             this.manager.controllerHooked(this)
         }
 
-        console.log('yt hooked')
         this.hooked = true
     }
 
     play(muted) {
-        console.log('this.play()', this.source)
         if ((!this.source) || (!this.ready))
             return
         
@@ -284,7 +277,6 @@ class YouTubeController extends DummyController {
     }
 
     set(source) {
-        console.log('this.set()', source)
         if ((!this.ready) || source === this.source)
             return
 
