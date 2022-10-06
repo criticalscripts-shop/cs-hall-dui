@@ -574,6 +574,10 @@ class MediaManager {
         document.getElementById('idle').style = `background-image:url('${url}')`
     }
 
+    setFlagRatio(flag) {
+        document.body.className = flag ? 'flag-ratio' : ''
+    }
+
     setVideoToggle(toggle) {
         if (toggle)
             this.show()
@@ -654,6 +658,14 @@ window.addEventListener('message', event => {
                 return
 
             activeInstance.setIdleWallpaperUrl(event.data.url)
+
+            break
+
+        case 'cs-hall:setFlagRatio':
+            if (!activeInstance)
+                return
+
+            activeInstance.setFlagRatio(event.data.flag)
 
             break
 
